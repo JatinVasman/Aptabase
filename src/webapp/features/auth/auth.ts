@@ -1,5 +1,5 @@
-import { api } from "@fns/api";
 import { trackEvent } from "@aptabase/web";
+import { api } from "@fns/api";
 
 export type UserAccount = {
   id: string;
@@ -31,6 +31,11 @@ export async function me(): Promise<UserAccount | null> {
   if (status === 401) return null;
 
   return account.json() as Promise<UserAccount | null>;
+}
+
+export async function updateEmail(email: string): Promise<UserAccount | null> {
+  await api.put("/_auth/account/update", { email });
+  return me();
 }
 
 export async function signOut(): Promise<void> {

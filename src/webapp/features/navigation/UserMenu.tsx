@@ -4,10 +4,12 @@ import { isBillingEnabled } from "@features/env";
 import { ThemeToggle } from "@features/theme";
 import { Menu, Transition } from "@headlessui/react";
 import { IconCreditCard, IconDoorExit } from "@tabler/icons-react";
-import React, { Fragment } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import React, { Fragment, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
-import { signOut, UserAccount, UserAvatar } from "../auth";
+import { signOut, updateEmail, UserAccount, UserAvatar } from "../auth";
 
 type Props = {
   user: UserAccount;
@@ -40,6 +42,31 @@ const MenuItem = (props: {
 
 export function UserMenu(props: Props) {
   const billing = useBillingState();
+  const queryClient = useQueryClient();
+  const [editEmail, setEditEmail] = useState(false);
+  const [email, setEmail] = useState<string>(props.user.email);
+
+  const handleEmail = async () => {
+    if (email === props.user.email) {
+      toast.error("Email is already set to your current email");
+      return;
+    }
+    if (typeof email !== "string" || email.length === 0) return;
+    try {
+      const updatedUser = await updateEmail(email);
+      setEditEmail(false);
+      toast.success("Email updated");
+      if (updatedUser) {
+        queryClient.setQueryData(["me"], updatedUser);
+      }
+    } catch (err: any) {
+      console.error(err.message);
+      toast.error("Failed to update email");
+      setEmail(props.user.email);
+    }
+  };
+
+  const toggleEdit = () => setEditEmail((prev) => !prev);
 
   return (
     <Menu as="div" className="relative">
@@ -62,12 +89,31 @@ export function UserMenu(props: Props) {
         leaveTo="transform opacity-0 scale-95"
       >
         <Menu.Items className="absolute right-0 lg:bottom-8 lg:right-auto z-10 mt-2 w-60 origin-top-right rounded-md py-1 shadow-lg border bg-background focus-ring">
-          <div className="px-3 py-1 text-xs flex items-center justify-between">
-            <div>
+          <div className="px-3 py-1 text-xs flex flex-col gap-y-2">
+            <div className="flex flex-col gap-y-1">
               <span className="text-muted-foreground">Signed in as</span>
-              <span className="block truncate text-sm font-medium">{props.user.email}</span>
+              {editEmail ? (
+                <input
+                  className="border p-1 rounded-sm outline"
+                  onChange={(e) => setEmail(e.target.value)}
+                  value={email}
+                />
+              ) : (
+                <span className="block truncate text-sm font-medium">{props.user.email}</span>
+              )}
             </div>
-            <ThemeToggle />
+            <div className="flex items-center justify-between">
+              {editEmail ? (
+                <button className="border p-1 cursor-pointer text-xs rounded-sm hover:bg-accent" onClick={handleEmail}>
+                  Save changes
+                </button>
+              ) : (
+                <button onClick={toggleEdit} className="border p-1 cursor-pointer text-xs rounded-sm hover:bg-accent">
+                  Edit email
+                </button>
+              )}
+              <ThemeToggle />
+            </div>
           </div>
           {isBillingEnabled && (
             <>

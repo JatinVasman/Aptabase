@@ -13,6 +13,12 @@ public class SignInBodyRequest
     public string Email { get; set; } = "";
 }
 
+public class UpdateAccountRequest
+{
+    [EmailAddress]
+    public string Email { get; set; } = "";
+}
+
 public class RegisterBodyRequest
 {
     [StringLength(40, MinimumLength = 2)]
@@ -90,6 +96,17 @@ public class AuthController : Controller
         if (user is null)
             return NotFound();
 
+        return Ok(user);
+    }
+    [HttpPut("/api/_auth/account/update")]
+    [IsAuthenticated]
+    [EnableCors("AllowAptabaseCom")]
+    public async Task<IActionResult> UpdateEmail([FromBody] UpdateAccountRequest body, CancellationToken cancellationToken)
+    {
+        var identity = this.GetCurrentUserIdentity();
+        var user = await _authService.UpdateEmail(body.Email, cancellationToken);
+        if (user is null)
+            return NotFound();
         return Ok(user);
     }
 
