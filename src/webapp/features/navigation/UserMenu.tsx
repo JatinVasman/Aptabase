@@ -5,7 +5,7 @@ import { ThemeToggle } from "@features/theme";
 import { Menu, Transition } from "@headlessui/react";
 import { IconCreditCard, IconDoorExit } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
-import React, { Fragment, useState } from "react";
+import React, { Fragment, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
@@ -40,20 +40,34 @@ const MenuItem = (props: {
   </Menu.Item>
 );
 
-export function UserMenu(props: Props) {
+export function UserMenu({ user }: Props) {
   const billing = useBillingState();
   const queryClient = useQueryClient();
-  const [editEmail, setEditEmail] = useState(false);
-  const [email, setEmail] = useState<string>(props.user.email);
 
-  const handleEmail = async () => {
-    if (email === props.user.email) {
+  const [editEmail, setEditEmail] = useState(false);
+  const [email, setEmail] = useState<string>(user.email);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editEmail) {
+      inputRef.current?.focus();
+    }
+  }, [editEmail]);
+
+  const handleEmailUpdate = async () => {
+    const trimmed = email.trim();
+    if (trimmed === user.email) {
       toast.error("Email is already set to your current email");
       return;
     }
-    if (typeof email !== "string" || email.length === 0) return;
+
+    if (!trimmed.includes("@") || trimmed.length < 3) {
+      toast.error("Invalid email address");
+      return;
+    }
+
     try {
-      const updatedUser = await updateEmail(email);
+      const updatedUser = await updateEmail(trimmed);
       setEditEmail(false);
       toast.success("Email updated");
       if (updatedUser) {
@@ -62,23 +76,22 @@ export function UserMenu(props: Props) {
     } catch (err: any) {
       console.error(err.message);
       toast.error("Failed to update email");
-      setEmail(props.user.email);
+      setEmail(user.email); // Reset to old email
     }
   };
-
-  const toggleEdit = () => setEditEmail((prev) => !prev);
 
   return (
     <Menu as="div" className="relative">
       <Menu.Button className="flex w-full p-2 gap-2 items-center rounded text-sm focus-ring hover:bg-accent">
         {({ open }) => (
           <>
-            <UserAvatar user={props.user} />
-            <div className="hidden lg:block">{props.user.name}</div>
+            <UserAvatar user={user} />
+            <div className="hidden lg:block">{user.name}</div>
             {!open && billing === "OVERUSE" && <PingSignal color="warning" size="sm" />}
           </>
         )}
       </Menu.Button>
+
       <Transition
         as={Fragment}
         enter="transition ease-out duration-100"
@@ -94,27 +107,33 @@ export function UserMenu(props: Props) {
               <span className="text-muted-foreground">Signed in as</span>
               {editEmail ? (
                 <input
-                  className="border p-1 rounded-sm outline"
+                  ref={inputRef}
+                  className="border p-1 rounded-sm text-sm"
                   onChange={(e) => setEmail(e.target.value)}
                   value={email}
                 />
               ) : (
-                <span className="block truncate text-sm font-medium">{props.user.email}</span>
+                <span className="block truncate text-sm font-medium">{user.email}</span>
               )}
             </div>
             <div className="flex items-center justify-between">
               {editEmail ? (
-                <button className="border p-1 cursor-pointer text-xs rounded-sm hover:bg-accent" onClick={handleEmail}>
+                <button
+                  className="border p-1 text-xs rounded-sm hover:bg-accent disabled:opacity-50"
+                  onClick={handleEmailUpdate}
+                  disabled={!email || !email.includes("@")}
+                >
                   Save changes
                 </button>
               ) : (
-                <button onClick={toggleEdit} className="border p-1 cursor-pointer text-xs rounded-sm hover:bg-accent">
+                <button onClick={() => setEditEmail(true)} className="border p-1 text-xs rounded-sm hover:bg-accent">
                   Edit email
                 </button>
               )}
               <ThemeToggle />
             </div>
           </div>
+
           {isBillingEnabled && (
             <>
               <Divider />
@@ -125,6 +144,7 @@ export function UserMenu(props: Props) {
               </MenuItem>
             </>
           )}
+
           <Divider />
           <MenuItem href="#" onClick={signOut}>
             <IconDoorExit className="w-4 h-4" />

@@ -1,3 +1,4 @@
+# Build results
 obj
 bin
 .vs
@@ -5,10 +6,55 @@ bin
 .DS_Store
 coverage.cobertura.xml
 
+# Tinybird
 etc/tinybird/.tinyb
+
+# Frontend
 src/node_modules
 src/wwwroot/
+
+# Properties
 src/Properties/*
 !src/Properties/launchSettings.example.json
 /tests/IntegrationTests/Properties/launchSettings.json
 /tests/UnitTests/Properties/launchSettings.json
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+.env.development
+
+# Docker volumes data
+dataprotection/
+dataprotection-keys/
+
+# Database data (if using local directories)
+db-data/
+events-db-data/
+
+# Docker Compose override files
+docker-compose.override.yml
+docker-compose.*.yml
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# IDE
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini

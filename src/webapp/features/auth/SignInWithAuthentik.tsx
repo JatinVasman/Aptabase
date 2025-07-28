@@ -4,9 +4,9 @@ export function SignInWithAuthentik() {
   const url = `/api/_auth/authentik`;
 
   return (
-    <Button asChild variant="outline">
-      <a href={url} className="flex space-x-2 w-full">
-        <span>Continue with OIDC</span>
+    <Button asChild>
+      <a href={url} className="flex justify-center w-full">
+        <span>Continue via OIDC</span>
       </a>
     </Button>
   );

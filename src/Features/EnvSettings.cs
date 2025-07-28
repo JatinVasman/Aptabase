@@ -85,21 +85,25 @@ public class EnvSettings
 
     // The Authentik Authorize URL for OAuth
     // Variable Name: OAUTH_AUTHENTIK_AUTHORIZE_URL
-    public string OAuthAuthentikAuthorizeURL { get; private set; } = "";
+    public string OAuthAuthentikAuthorizeUrl { get; private set; } = "";
 
     // The Authentik Token URL for OAuth
     // Variable Name: OAUTH_AUTHENTIK_TOKEN_URL
-    public string OAuthAuthentikTokenURL { get; private set; } = "";
+    public string OAuthAuthentikTokenUrl { get; private set; } = "";
 
-     // The Authentik Userinfo URL for OAuth
+    // The Authentik Userinfo URL for OAuth
     // Variable Name: OAUTH_AUTHENTIK_USERINFO_URL
-    public string OAuthAuthentikUserinfoURL { get; private set; } = "";
+    public string OAuthAuthentikUserinfoUrl { get; private set; } = "";
+
+    // Whether to disable email-based authentication (magic links)
+    // Variable Name: DISABLE_EMAIL_AUTH
+    public bool DisableEmailAuth { get; private set; } = false;
 
     //  The following properties are derived from the other settings
-    public bool IsManagedCloud = false; //=> Region == "EU" || Region == "US";
-    public bool IsBillingEnabled = false; //=> IsManagedCloud || IsDevelopment;
-    public bool IsProduction = true; //=> !IsDevelopment;
-    public bool IsDevelopment = false; //{ get; private set; }
+    public bool IsManagedCloud => Region == "EU" || Region == "US";
+    public bool IsBillingEnabled => IsManagedCloud || IsDevelopment;
+    public bool IsProduction => !IsDevelopment;
+    public bool IsDevelopment { get; private set; }
     public string Region { get; private set; } = "";
     public string LemonSqueezyApiKey { get; private set; } = "";
     public string LemonSqueezySigningSecret { get; private set; } = "";
@@ -107,14 +111,14 @@ public class EnvSettings
 
     public static EnvSettings Load()
     {
-        //var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
-        //var region = isDevelopment ? "DEV" : Get("REGION").ToUpper();
-        //if (string.IsNullOrEmpty(region))
-        var region = "SH"; // Self Hosted
+        var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        var region = isDevelopment ? "DEV" : Get("REGION").ToUpper();
+        if (string.IsNullOrEmpty(region))
+            region = "SH"; // Self Hosted
 
         return new EnvSettings
         {
-            //IsDevelopment = isDevelopment,
+            IsDevelopment = isDevelopment,
             Region = region,
             SelfBaseUrl = MustGet("BASE_URL"),
             ConnectionString = GetOrNull("ConnectionStrings__postgresdb") ?? MustGet("DATABASE_URL"),
@@ -138,9 +142,10 @@ public class EnvSettings
             OAuthGoogleClientSecret = Get("OAUTH_GOOGLE_CLIENT_SECRET"),
             OAuthAuthentikClientId = Get("OAUTH_AUTHENTIK_CLIENT_ID"),
             OAuthAuthentikClientSecret = Get("OAUTH_AUTHENTIK_CLIENT_SECRET"),
-            OAuthAuthentikAuthorizeURL = Get("OAUTH_AUTHENTIK_AUTHORIZE_URL"),
-            OAuthAuthentikTokenURL = Get("OAUTH_AUTHENTIK_TOKEN_URL"),
-            OAuthAuthentikUserinfoURL = Get("OAUTH_AUTHENTIK_USERINFO_URL"),
+            OAuthAuthentikAuthorizeUrl = Get("OAUTH_AUTHENTIK_AUTHORIZE_URL"),
+            OAuthAuthentikTokenUrl = Get("OAUTH_AUTHENTIK_TOKEN_URL"),
+            OAuthAuthentikUserinfoUrl = Get("OAUTH_AUTHENTIK_USERINFO_URL"),
+            DisableEmailAuth = GetBool("DISABLE_EMAIL_AUTH"),
 
             // On the container, the etc directory is mounted at ./etc
             // But during development, it's at ../etc
@@ -174,5 +179,15 @@ public class EnvSettings
     private static string MustGet(string name)
     {
         return Environment.GetEnvironmentVariable(name) ?? throw new Exception($"Missing {name} environment variable");
+    }
+
+    private static bool GetBool(string name)
+    {
+        var value = Environment.GetEnvironmentVariable(name);
+        if (string.IsNullOrEmpty(value))
+            return false;
+        if (bool.TryParse(value, out var result))
+            return result;
+        return false;
     }
 }

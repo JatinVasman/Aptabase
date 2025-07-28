@@ -25,9 +25,9 @@ public interface IAuthTokenManager
 
 public class AuthTokenManager : IAuthTokenManager
 {
-    private readonly JwtSecurityTokenHandler _tokenHandler = new JwtSecurityTokenHandler(); 
-    private readonly SymmetricSecurityKey _signingKey; 
-    private readonly string _issuer; 
+    private readonly JwtSecurityTokenHandler _tokenHandler = new JwtSecurityTokenHandler();
+    private readonly SymmetricSecurityKey _signingKey;
+    private readonly string _issuer;
 
     public AuthTokenManager(EnvSettings env)
     {

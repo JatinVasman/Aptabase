@@ -7,17 +7,18 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Aptabase.Features.Authentication;
 
+public class UpdateAccountRequest
+{
+    [EmailAddress]
+    public string Email { get; set; } = "";
+}
+
 public class SignInBodyRequest
 {
     [EmailAddress]
     public string Email { get; set; } = "";
 }
 
-public class UpdateAccountRequest
-{
-    [EmailAddress]
-    public string Email { get; set; } = "";
-}
 
 public class RegisterBodyRequest
 {
@@ -49,36 +50,42 @@ public class AuthController : Controller
         _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
     }
 
-    // [HttpPost("/api/_auth/signin")]
-    // public async Task<IActionResult> SignIn([FromBody] SignInBodyRequest body, CancellationToken cancellationToken)
-    // {
-    //     var found = await _authService.SendSignInEmailAsync(body.Email.Trim(), cancellationToken);
+    [HttpPost("/api/_auth/signin")]
+    public async Task<IActionResult> SignIn([FromBody] SignInBodyRequest body, CancellationToken cancellationToken)
+    {
+        if (_env.DisableEmailAuth)
+            return NotFound(new { });
 
-    //     if (!found)
-    //         return NotFound(new { });
+        var found = await _authService.SendSignInEmailAsync(body.Email.Trim(), cancellationToken);
 
-    //     return Ok(new { });
-    // }
+        if (!found)
+            return NotFound(new { });
 
-    // [HttpPost("/api/_auth/register")]
-    // [EnableRateLimiting("SignUp")]
-    // public async Task<IActionResult> Register([FromBody] RegisterBodyRequest body, CancellationToken cancellationToken)
-    // {
-    //     await _authService.SendRegisterEmailAsync(body.Name.Trim(), body.Email.Trim(), cancellationToken);
-    //     return Ok(new { });
-    // }
+        return Ok(new { });
+    }
 
-    // [HttpGet("/api/_auth/github")]
-    // public IActionResult GitHub()
-    // {
-    //     return Challenge(new AuthenticationProperties { RedirectUri = $"{_env.SelfBaseUrl}/" }, "github");
-    // }
+    [HttpPost("/api/_auth/register")]
+    [EnableRateLimiting("SignUp")]
+    public async Task<IActionResult> Register([FromBody] RegisterBodyRequest body, CancellationToken cancellationToken)
+    {
+        if (_env.DisableEmailAuth)
+            return NotFound(new { });
 
-    // [HttpGet("/api/_auth/google")]
-    // public IActionResult Google()
-    // {
-    //     return Challenge(new AuthenticationProperties { RedirectUri = $"{_env.SelfBaseUrl}/" }, "google");
-    // }
+        await _authService.SendRegisterEmailAsync(body.Name.Trim(), body.Email.Trim(), cancellationToken);
+        return Ok(new { });
+    }
+
+    [HttpGet("/api/_auth/github")]
+    public IActionResult GitHub()
+    {
+        return Challenge(new AuthenticationProperties { RedirectUri = $"{_env.SelfBaseUrl}/" }, "github");
+    }
+
+    [HttpGet("/api/_auth/google")]
+    public IActionResult Google()
+    {
+        return Challenge(new AuthenticationProperties { RedirectUri = $"{_env.SelfBaseUrl}/" }, "google");
+    }
 
     [HttpGet("/api/_auth/authentik")]
     public IActionResult Authentik()
@@ -98,6 +105,26 @@ public class AuthController : Controller
 
         return Ok(user);
     }
+
+    [HttpGet("/api/_auth/oauth-status")]
+    public IActionResult GetOAuthStatus()
+    {
+        var hasGitHub = !string.IsNullOrWhiteSpace(_env.OAuthGitHubClientId) && !string.IsNullOrWhiteSpace(_env.OAuthGitHubClientSecret);
+        var hasGoogle = !string.IsNullOrWhiteSpace(_env.OAuthGoogleClientId) && !string.IsNullOrWhiteSpace(_env.OAuthGoogleClientSecret);
+        var hasAuthentik = !string.IsNullOrWhiteSpace(_env.OAuthAuthentikClientId) &&
+                           !string.IsNullOrWhiteSpace(_env.OAuthAuthentikClientSecret) &&
+                           !string.IsNullOrWhiteSpace(_env.OAuthAuthentikAuthorizeUrl) &&
+                           !string.IsNullOrWhiteSpace(_env.OAuthAuthentikTokenUrl) &&
+                           !string.IsNullOrWhiteSpace(_env.OAuthAuthentikUserinfoUrl);
+
+        return Ok(new
+        {
+            github = hasGitHub,
+            google = hasGoogle,
+            authentik = hasAuthentik,
+            emailAuthDisabled = _env.DisableEmailAuth
+        });
+    }
     [HttpPut("/api/_auth/account/update")]
     [IsAuthenticated]
     [EnableCors("AllowAptabaseCom")]
@@ -109,6 +136,7 @@ public class AuthController : Controller
             return NotFound();
         return Ok(user);
     }
+
 
     [HttpPost("/api/_auth/account/delete")]
     [IsAuthenticated]

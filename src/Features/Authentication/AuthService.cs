@@ -126,7 +126,7 @@ public class AuthService : IAuthService
 
         var authProperties = new AuthenticationProperties
         {
-            ExpiresUtc = DateTime.UtcNow.AddDays(7),
+            ExpiresUtc = DateTime.UtcNow.AddDays(365),
             IsPersistent = true,
         };
 
@@ -134,24 +134,6 @@ public class AuthService : IAuthService
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(claimsIdentity),
             authProperties);
-    }
-
-    public async Task<UserAccount?> UpdateEmail(string email, CancellationToken cancellationToken)
-    {
-        if (_httpContextAccessor.HttpContext == null || !_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
-            return null;
-
-        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue("id");
-        if (string.IsNullOrEmpty(userId))
-            return null;
-
-        var cmd = new CommandDefinition(
-            "UPDATE users SET email = @Email WHERE id = @UserId RETURNING id, name, email, lock_reason",
-            new { Email = email.ToLower(), UserId = userId },
-            cancellationToken: cancellationToken
-        );
-
-        return await _db.Connection.QuerySingleOrDefaultAsync<UserAccount>(cmd);
     }
 
     public Task DeleteUserByIdAsync(string id, CancellationToken cancellationToken)
@@ -237,4 +219,24 @@ public class AuthService : IAuthService
     }
 
     private string GenerateAuthUrl(string token) => $"{_env.SelfBaseUrl}/api/_auth/continue?token={token}";
+
+    //Added this Service method in AuthService class
+    public async Task<UserAccount?> UpdateEmail(string email, CancellationToken cancellationToken)
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated != true)
+            return null;
+
+        var userId = user.FindFirstValue("id");
+        if (string.IsNullOrEmpty(userId))
+            return null;
+
+        var cmd = new CommandDefinition(
+            "UPDATE users SET email = @Email WHERE id = @UserId RETURNING id, name, email, lock_reason",
+            new { Email = email.ToLower(), UserId = userId },
+            cancellationToken: cancellationToken
+        );
+
+        return await _db.Connection.QuerySingleOrDefaultAsync<UserAccount>(cmd);
+    }
 }

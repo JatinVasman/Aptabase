@@ -1,53 +1,51 @@
-import { requestRegisterLink } from "@features/auth";
 import { Page } from "@components/Page";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { DataResidency } from "./DataResidency";
 import { LegalNotice } from "./LegalNotice";
-import { RegionSwitch } from "./RegionSwitch";
-import { SignInWithGitHub } from "./SignInWithGitHub";
-import { SignInWithGoogle } from "./SignInWithGoogle";
-import { isOAuthEnabled } from "@features/env";
 import { Logo } from "./Logo";
-import { Button } from "@components/Button";
-import { TextInput } from "@components/TextInput";
+import { OAuthButtons } from "./OAuthButtons";
 
-type FormStatus = "idle" | "loading" | "success";
-
-type StatusMessageProps = {
-  status: FormStatus;
+type OAuthStatus = {
+  github: boolean;
+  google: boolean;
+  authentik: boolean;
+  emailAuthDisabled: boolean;
 };
 
-const StatusMessage = (props: StatusMessageProps) => {
-  if (props.status === "success") {
-    return <span className="text-success">Woo-hoo! Email sent, go check your inbox!</span>;
-  }
-
-  return (
-    <>
-      Already registered?{" "}
-      <Link className="font-medium text-foreground" to="/auth">
-        Sign in
-      </Link>{" "}
-      to your account.
-    </>
-  );
-};
-
-Component.displayName = "RegisterPage";
 export function Component() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<FormStatus>("idle");
+  const [oauthStatus, setOauthStatus] = useState<OAuthStatus | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setStatus("loading");
+  useEffect(() => {
+    const checkOAuthStatus = async () => {
+      try {
+        const response = await fetch("/api/_auth/oauth-status");
+        const status = await response.json();
+        setOauthStatus(status);
+      } catch {
+        setOauthStatus(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    await requestRegisterLink(name, email);
+    checkOAuthStatus();
+  }, []);
 
-    setStatus("success");
-  };
+  if (loading) {
+    return (
+      <Page title="Sign up">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <Logo className="mx-auto h-12 w-auto text-primary" />
+          <h2 className="text-center text-3xl font-bold">Sign up for an account</h2>
+          <DataResidency />
+        </div>
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="py-8 px-4 sm:rounded-lg sm:px-10 text-center text-muted-foreground">Loading...</div>
+        </div>
+      </Page>
+    );
+  }
 
   return (
     <Page title="Sign up">
@@ -58,50 +56,9 @@ export function Component() {
       </div>
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="py-8 px-4 sm:rounded-lg sm:px-10">
-          {isOAuthEnabled && (
-            <>
-              <div className="space-y-2">
-                <SignInWithGitHub />
-                <SignInWithGoogle />
-              </div>
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                  <div className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-muted">OR</span>
-                </div>
-              </div>
-            </>
-          )}
-
-          <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
-            <TextInput
-              label="Name"
-              name="name"
-              placeholder="Peter Parker"
-              value={name}
-              required={true}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <TextInput
-              label="Email Address"
-              name="email"
-              type="email"
-              placeholder="peter.parker@corp.com"
-              autoComplete="email"
-              value={email}
-              required={true}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <Button loading={status === "loading"}>Send magic link</Button>
-            <p className="text-center text-sm h-10 text-muted-foreground">
-              <StatusMessage status={status} />
-            </p>
-          </form>
+          <OAuthButtons />
         </div>
         <LegalNotice operation="signup" />
-        <RegionSwitch />
       </div>
     </Page>
   );

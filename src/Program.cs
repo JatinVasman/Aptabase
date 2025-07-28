@@ -17,12 +17,12 @@ using Features.Cache;
 using FluentMigrator.Runner;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Hosting;
 using System.Net.Http.Headers;
 using System.Threading.RateLimiting;
+
 
 public partial class Program
 {
@@ -56,7 +56,7 @@ public partial class Program
                     .AllowCredentials()
                     .SetPreflightMaxAge(TimeSpan.FromHours(1));
             });
-            
+
             options.AddPolicy(name: "AllowAny", policy =>
             {
                 policy.AllowAnyOrigin()
@@ -69,8 +69,10 @@ public partial class Program
         if (appEnv.IsManagedCloud)
         {
             builder.Services.AddDataProtection()
-                            .PersistKeysToAWSSystemsManager("/aptabase/production/aspnet-dataprotection/");
+             .PersistKeysToAWSSystemsManager("/aptabase/production/aspnet-dataprotection/");
         }
+
+
 
         builder.Services.AddControllers();
         builder.Services.AddResponseCaching();
@@ -78,19 +80,16 @@ public partial class Program
         builder.Services.AddMemoryCache();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-.AddCookie(options =>
-{
-    options.ExpireTimeSpan = TimeSpan.FromDays(7);
-    options.Cookie.Name = "auth-session";
-    options.Cookie.SameSite = SameSiteMode.Strict;
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-    options.Cookie.MaxAge = TimeSpan.FromDays(7);
-})
-.AddGitHub(appEnv)
-.AddGoogle(appEnv)
-.AddAuthentik(appEnv);
+                        .AddCookie(options =>
+                        {
+                            options.ExpireTimeSpan = TimeSpan.FromDays(365);
+                            options.Cookie.Name = "auth-session";
+                            options.Cookie.SameSite = SameSiteMode.Strict;
+                            options.Cookie.HttpOnly = true;
+                            options.Cookie.IsEssential = true;
+                            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                            options.Cookie.MaxAge = TimeSpan.FromDays(365);
+                        }).AddAuthentik(appEnv);
 
         builder.Services.AddRateLimiter(c =>
         {
@@ -199,15 +198,24 @@ public partial class Program
         }
 
         var app = builder.Build();
-        
+
         app.UseResponseCompression();
 
         app.UseForwardedHeaders(new ForwardedHeadersOptions
         {
             // App may be running on HTTP behind a HTTPS proxy/load balancer
             // So we need to use the X-Forwarded-Proto forwarded header
-            ForwardedHeaders = ForwardedHeaders.XForwardedProto
+            ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost | ForwardedHeaders.XForwardedFor
         });
+
+        if (appEnv.IsProduction)
+        {
+            app.Use(async (context, next) =>
+            {
+                context.Request.Scheme = "https";
+                await next();
+            });
+        }
 
         app.MapHealthChecks("/healthz");
         app.UseMiddleware<ExceptionMiddleware>();
@@ -224,12 +232,21 @@ public partial class Program
             {
                 OnPrepareResponse = ctx =>
                 {
-                    ctx.Context.Response.Headers.Append("Content-Security-Policy", "default-src 'self' 'unsafe-inline'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://client.crisp.chat; script-src 'self' 'unsafe-inline' https://client.crisp.chat; font-src 'self' https://client.crisp.chat; connect-src 'self' https://raw.githubusercontent.com wss://client.relay.crisp.chat https://client.crisp.chat; frame-ancestors *;");
+                    ctx.Context.Response.Headers.Append("Content-Security-Policy",
+                            "default-src 'self' 'unsafe-inline'; " +
+                            "img-src 'self' data: https:; " +
+                            "style-src 'self' 'unsafe-inline' https://client.crisp.chat; " +
+                            "script-src 'self' 'unsafe-inline' https://client.crisp.chat; " +
+                            "font-src 'self' https://client.crisp.chat; " +
+                            "connect-src 'self' https://raw.githubusercontent.com wss://client.relay.crisp.chat https://client.crisp.chat; " +
+                            "frame-ancestors *;"
+                        );
+
                     ctx.Context.Response.Headers.Remove("X-Frame-Options");
-                    ctx.Context.Response.Headers.Append("Content-Security-Policy", "frame-ancestors *");
                     ctx.Context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
                     ctx.Context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
                     ctx.Context.Response.Headers.Append("Cache-Control", "no-store,no-cache");
+
                 }
             });
 
@@ -251,7 +268,7 @@ public partial class Program
     public static void RunMigrations(IServiceProvider sp)
     {
         using var scope = sp.CreateScope();
-        
+
         // Execute Postgres migrations
         var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
         runner.MigrateUp();

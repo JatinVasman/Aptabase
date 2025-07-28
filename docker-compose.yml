@@ -2,23 +2,20 @@ services:
   aptabase:
     container_name: aptabase_app
     image: ghcr.io/arunabh-hazarika/aptabase:authentik
-     
     restart: always
     depends_on:
       - aptabase_events_db
       - aptabase_db
     ports:
       - 8000:8080
+    volumes:
+      - dataprotection-keys:/root/.aspnet/DataProtection-Keys
+    env_file:
+      - .env
     environment:
-      BASE_URL: http://localhost:8000 # replace with your ip or domain, including port if needed
-      AUTH_SECRET: c4rI4x8kz5DgKJ1is5Eiu9bNncSQ6ROD # get a strong secret from https://randomkeygen.com/
-      DATABASE_URL: Server=aptabase_db;Port=5432;User Id=aptabase;Password=sTr0NGp4ssw0rd;Database=aptabase
-      CLICKHOUSE_URL: Host=aptabase_events_db;Port=8123;Username=aptabase;Password=sTr0NGp4ssw0rd
-      OAUTH_AUTHENTIK_CLIENT_ID: abcdefghijklmnopqrstuvwxyz # replace with your client id
-      OAUTH_AUTHENTIK_CLIENT_SECRET: abcdefghijklmnopqrstuvwxyz # replace with your client secret
-      OAUTH_AUTHENTIK_AUTHORIZE_URL: https://authentik.example.com/application/o/authorize/ # replace with your Authorize URL
-      OAUTH_AUTHENTIK_TOKEN_URL: https://authentik.example.com/application/o/token/ # replace with your Token URL
-      OAUTH_AUTHENTIK_USERINFO_URL: https://authentik.example.com/application/o/userinfo/ # replace with your Userinfo URL
+      # Override any environment-specific variables here if needed
+      # All other variables will be loaded from .env file
+      ASPNETCORE_ENVIRONMENT: Production
 
   aptabase_db:
     container_name: aptabase_db
@@ -26,9 +23,12 @@ services:
     restart: always
     volumes:
       - db-data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    # Only include the specific postgres environment variables
     environment:
-      POSTGRES_USER: aptabase
-      POSTGRES_PASSWORD: sTr0NGp4ssw0rd
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
   aptabase_events_db:
     container_name: aptabase_events_db
@@ -36,9 +36,11 @@ services:
     restart: always
     volumes:
       - events-db-data:/var/lib/clickhouse
+    env_file:
+      - .env
     environment:
-      CLICKHOUSE_USER: aptabase
-      CLICKHOUSE_PASSWORD: sTr0NGp4ssw0rd
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
     ulimits:
       nofile:
         soft: 262144
@@ -48,4 +50,6 @@ volumes:
   db-data:
     driver: local
   events-db-data:
+    driver: local
+  dataprotection-keys:
     driver: local
