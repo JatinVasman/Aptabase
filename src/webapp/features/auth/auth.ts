@@ -49,8 +49,3 @@ export async function signOut(): Promise<void> {
   await api.fetch("POST", "/_auth/signout");
   location.href = "/auth";
 }
-//Added updateEmail function for backend call
-export async function updateEmail(email: string): Promise<UserAccount | null> {
-  await api.put("/_auth/account/update", { email });
-  return me();
-}
