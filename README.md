@@ -19,67 +19,143 @@
 
 [Aptabase](https://aptabase.com) is an open-source alternative to Firebase/Google Analytics, specifically built for Mobile, Desktop and Web apps.
 
-📱 **Extensive list of SDK**: No matter what framework or language you use, we have an SDK for you. Swift, React Native, Flutter, Electron, Kotlin, and many others.
+## Key Features
 
-😇 **Privacy-First**: We prioritize user privacy and collect minimal usage data without using unique identifiers. Instead, we focus on monitoring sessions, complying fully with GDPR, CCPA, and PECR regulations.
+📱 **Extensive SDK Support**: Comprehensive SDKs for all major platforms including Swift, React Native, Flutter, Electron, Kotlin, and many more.
 
-🚀 **Simple**: Built-in and user-friendly dashboard for all your essential metrics, enabling you to gain insights effortlessly and grasp the dynamics of your apps.
+😇 **Privacy-First**: User privacy is our priority. We collect minimal usage data without unique identifiers, focusing on session monitoring while fully complying with GDPR, CCPA, and PECR regulations.
 
-💯 **Open-Source**: Our source code is 100% open source. There is nothing hidden. All the server code and SDKs are available for you to inspect and contribute to.
+🚀 **Simple & Intuitive**: Built-in dashboard providing essential metrics with effortless insights into your app's performance and user behavior.
+
+💯 **100% Open Source**: Complete transparency with all server code and SDKs available for inspection and contribution.
 
 > [!TIP]
 > Like what you see? Don't forget to give us a ⭐️ on GitHub!
 
-# How to get started?
+## Getting Started
 
-## ☁️ Managed Cloud
+### ☁️ Managed Cloud
 
-The easiest and quickest way to get started. A fully managed service by the creators of Aptabase to help you get started in minutes. Forget about managing software updates and patches; we do it all for you!
+The fastest way to get started with Aptabase. Our fully managed service handles all maintenance, updates, and patches so you can focus on building great apps.
 
-[Try free now →](https://aptabase.com)
+[Start Free Trial →](https://aptabase.com)
 
-## 🏢 Self-Hosted
+### 🏢 Self-Hosted
 
-You can also host Aptabase on your servers. It's free, but you are responsible for maintenance and updates.
+Host Aptabase on your own infrastructure for complete control over your data. Free to use with the responsibility of maintenance and updates on you.
 
-[Learn how →](https://github.com/aptabase/self-hosting).
+[Self-Hosting Guide →](https://github.com/aptabase/self-hosting)
 
-## 🛠️ Contributing
+### 🛠️ Development Setup
 
-We welcome contributions from everyone! If you want to contribute to Aptabase, please read the guide below to get started.
+```bash
+# Clone the repository
+git clone https://github.com/aptabase/aptabase.git
+cd aptabase
 
-[Contributing →](./CONTRIBUTING.md).
+# Start with Docker Compose
+docker-compose up -d
 
-# SDKs
+# Access the dashboard
+open http://localhost:8000
+```
 
-We provide SDKs for the most popular frameworks and languages to make it easier to integrate them into your app.
+## Supported Platforms
 
-- [Swift (Apple)](https://github.com/aptabase/aptabase-swift)
+We provide official SDKs for all major development platforms:
+
+### Mobile
+
+- [Swift (iOS/macOS)](https://github.com/aptabase/aptabase-swift)
 - [Android (Kotlin)](https://github.com/aptabase/aptabase-kotlin)
 - [React Native](https://github.com/aptabase/aptabase-react-native)
 - [Flutter](https://github.com/aptabase/aptabase_flutter)
-- [Tauri](https://github.com/aptabase/tauri-plugin-aptabase)
-- [NativeScript](https://github.com/nstudio/nativescript-plugins/tree/main/packages/nativescript-aptabase)
 - [.NET MAUI](https://github.com/aptabase/aptabase-maui)
+- [NativeScript](https://github.com/nstudio/nativescript-plugins/tree/main/packages/nativescript-aptabase)
+
+### Desktop
+
 - [Electron](https://github.com/aptabase/aptabase-electron)
-- [Web Apps](https://github.com/aptabase/aptabase-js)
-- [Unreal Engine](https://github.com/aptabase/aptabase-unreal)
+- [Tauri](https://github.com/aptabase/tauri-plugin-aptabase)
+
+### Web
+
+- [JavaScript/Web Apps](https://github.com/aptabase/aptabase-js)
+
+### Game Engines
+
 - [Unity Engine](https://github.com/aptabase/aptabase-unity)
+- [Unreal Engine](https://github.com/aptabase/aptabase-unreal)
 
-🛠️ Don't see the SDK for your platform? You can build your own! Check out our guide on [how to build your own SDK](https://github.com/aptabase/aptabase/wiki/How-to-build-your-own-SDK).
+🛠️ **Need a custom SDK?** Check out our [SDK Development Guide](https://github.com/aptabase/aptabase/wiki/How-to-build-your-own-SDK) to build your own.
 
-# Need help?
+## Contributing
 
-- Find us on [Discord](https://discord.gg/d9d97unCUk) or [Twitter](https://twitter.com/aptabase)
-- Open a GitHub issue or a discussion on this repo
-- Shoot us an email [hi@aptabase.com](mailto:hi@aptabase.com)
+We welcome contributions from the community! Whether it's bug fixes, feature improvements, or new SDK development, your help makes Aptabase better for everyone.
 
-# Credits
+[Contributing Guidelines →](./CONTRIBUTING.md)
 
-Aptabase is highly inspired by [Plausible](https://github.com/plausible/analytics). If you're looking for privacy-friendly website analytics, go check them out. They're awesome! ❤️
+### Quick Start for Contributors
 
-# License
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and test thoroughly
+4. Commit with clear messages: `git commit -m 'Add amazing feature'`
+5. Push to your branch: `git push origin feature/amazing-feature`
+6. Open a Pull Request
 
-Aptabase is open-source under the [AGPLv3 license](./LICENSE). You can use it for free, but you must share any changes you make to the code.
+## Architecture
 
-The SDKs are open-source under the MIT license. Use it on your apps without any restrictions.
+Aptabase is built with modern technologies for scalability and performance:
+
+- **Backend**: ASP.NET Core with C#
+- **Database**: PostgreSQL
+- **Frontend**: React with TypeScript
+- **Authentication**: OpenID Connect (OIDC)
+- **Deployment**: Docker & Docker Compose
+
+## Community & Support
+
+### Get Help
+
+- 💬 [Join our Discord](https://discord.gg/d9d97unCUk)
+- 🐦 [Follow us on Twitter](https://twitter.com/aptabase)
+- 📧 [Email us](mailto:hi@aptabase.com)
+- 🐛 [Report issues](https://github.com/aptabase/aptabase/issues)
+- 💭 [Start discussions](https://github.com/aptabase/aptabase/discussions)
+
+### Documentation
+
+- [API Documentation](https://aptabase.com/docs/api)
+- [SDK Integration Guides](https://aptabase.com/docs/sdks)
+- [Self-Hosting Guide](https://github.com/aptabase/self-hosting)
+
+## Roadmap
+
+- [ ] Advanced filtering and segmentation
+- [ ] Real-time analytics dashboard
+- [ ] Custom event tracking improvements
+- [ ] Enhanced data export capabilities
+- [ ] Multi-tenant support
+- [ ] Advanced user flow analysis
+
+## Credits
+
+Aptabase is inspired by [Plausible Analytics](https://github.com/plausible/analytics). If you need privacy-friendly website analytics, check them out! ❤️
+
+## License
+
+- **Server Code**: [AGPLv3 License](./LICENSE) - Free to use, but changes to server code must be shared
+- **SDKs**: [MIT License](https://opensource.org/licenses/MIT) - Use freely in your applications without restrictions
+
+---
+
+<div align="center">
+  <p>Made with ❤️ by the Aptabase team</p>
+  <p>
+    <a href="https://aptabase.com">Website</a> •
+    <a href="https://aptabase.com/docs">Documentation</a> •
+    <a href="https://discord.gg/d9d97unCUk">Discord</a> •
+    <a href="https://twitter.com/aptabase">Twitter</a>
+  </p>
+</div>
