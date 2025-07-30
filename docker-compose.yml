@@ -1,7 +1,7 @@
 services:
   aptabase:
     container_name: aptabase_app
-    image: ghcr.io/arunabh-hazarika/aptabase:authentik
+    image: test/aptabase
     restart: always
     depends_on:
       - aptabase_events_db
